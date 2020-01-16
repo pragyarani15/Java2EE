@@ -1,0 +1,374 @@
+//Entity class
+package exam.hello;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
+public class Account {
+	
+	@Id
+	private int accno;
+	private int pin;
+	private int balance;
+	@Override
+	public String toString() {
+		return "Account [accno=" + accno + ", pin=" + pin + ", balance=" + balance + "]";
+	}
+
+	
+	Account(){
+		
+	}
+	
+	public int getAccno() {
+		return accno;
+	}
+	public void setAccno(int accno) {
+		this.accno = accno;
+	}
+	public int getPin() {
+		return pin;
+	}
+	public void setPin(int pin) {
+		this.pin = pin;
+	}
+	public int getBalance() {
+		return balance;
+	}
+	public void setBalance(int balance) {
+		this.balance = balance;
+	}
+	Account(int accno){
+		this.accno = accno;
+	}
+	Account(int accno , int pin,int balance){
+		this.accno = accno;
+		this.pin = pin;
+		this.balance = balance;
+	}
+	Account(int accno ,int balance){
+		this.accno = accno;
+		this.pin = pin;
+		this.balance = balance;
+	}
+
+	
+	
+}
+
+//MAIN CLASS
+package exam.hello;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class StartSpringBoot {
+
+	public static void main(String[] args) {
+		SpringApplication.run(StartSpringBoot.class, args);
+	}
+                   
+}
+//PRESENTATION CLASS
+package exam.hello;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+
+@CrossOrigin(origins = "*")
+@RestController
+public class A {
+	
+	private B obj1;
+	
+	public A()
+	{
+		////System.out.println("A object created");
+		
+	}
+	
+	
+	@Autowired
+	public void setObj1(B obj1) {
+		System.out.println("Controller : service is wired with Controller ");
+		this.obj1 = obj1;
+	}
+
+
+//http:localhost:8080?x=1
+	
+	//http://localhost:8080/pw?x=1
+	
+	//http://localhost:8080/pw?x=10, you will get mobile no as zero
+	
+	@GetMapping("/pw")
+	public Account f1(@RequestParam("x")int mn)//assume single select
+	{
+		System.out.println("function pw is getting called");
+		Account m =obj1.getAccount(mn);
+		return m;
+		
+	}
+	
+	
+	@PostMapping("/upd")
+	public Account f2(@RequestBody Account n)//assume single select
+	{
+	
+		
+		Account m =obj1.updateAcc(n);
+		return m;
+		
+	}
+	
+	@GetMapping("/ms") //multiselect
+	public List<Account> get()
+	{
+		List<Account> x =obj1.getAll();
+		return x;
+		
+	}
+	
+	
+//	@GetMapping("/sbs")
+//	public Account whocares(@RequestParam("x") int imeino)
+//	{
+//		System.out.println("please work");
+//		Account x =new Account();
+//		x.setAccno(88);
+//		x.setPin(800);
+//		x.setBalance(8989);
+//		return x;
+//		
+//	}
+	
+	@GetMapping("/del")
+	public Account delData(@RequestParam("x")int accno) {
+		
+		Account m = obj1.delAcc(accno);
+		return m;
+	}
+}
+
+//DAO CLASS
+package exam.hello;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class B {
+	
+	private C obj1;
+	
+	
+	@Autowired
+	public void setObj1(C obj1) {
+		System.out.println("Service : repository DAO  wired to service ");
+		this.obj1 = obj1;
+	}
+
+
+
+
+	public B()
+	{
+		
+		//System.out.println("B object created");
+	}
+
+
+
+
+	
+	//single select scenario
+	public Account getAccount(int accno) {
+		// note obj1 here is a repository object
+		
+		Optional<Account> x = obj1.findById(accno);
+		Account y =null;
+		if(x.isPresent())
+		{
+		
+			 y = x.get();  //get the Account object
+			updateAccount(y);
+		}
+		else
+		{
+			y =new Account(0);//making account no as zero if accno is not found;	
+		}
+		//logic is mobile object iemi no is zero then mobile no is not found.
+		return y;
+		
+		
+		
+		
+	}
+
+	public Account updateAccount(Account n) {
+	//	System.out.println("update failure");
+		// TODO Auto-generated method stub
+		n.setBalance(3000);
+		if(obj1.existsById(n.getAccno()))
+		{	
+			obj1.save(n);
+		}//change of failing is almost zero.
+		
+		else
+		{	
+			n = new Account(0);
+			//obj1.save(n);
+		}
+				return n;
+	}
+
+	public Account updateAcc(Account n) {
+	//	System.out.println("update failure");
+		// TODO Auto-generated method stub
+	
+		if(obj1.existsById(n.getAccno()))
+		{	
+			obj1.save(n);
+		}//change of failing is almost zero.
+		
+		else
+		{	
+			n = new Account(0);
+			//obj1.save(n);
+		}
+				return n;
+	}
+
+
+
+	public List<Account> getAll() {
+		// TODO Auto-generated method stub
+		return obj1.findAll();
+	}
+
+
+
+
+	public Account delAcc(int accno) {
+		// TODO Auto-generated method stub
+		obj1.deleteById(accno);
+	Account a = getAccount(accno);
+return a;
+	
+	}
+
+}
+//DAO REPOSITORY
+package exam.hello;
+
+import java.util.Collection;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface C extends JpaRepository<Account, Integer> {
+	
+	//Mobile is entity class, Integer is primary key
+	// hibernate will never work until you use concept called Primary key.
+	
+	@Query("SELECT u FROM Account u WHERE u.Balance = 3")
+	Collection<Account> findAllActiveUsers();
+}
+
+
+//REQUEST TAKING FROM BROWSER
+package exam.hello;
+
+import java.util.List;
+
+import org.springframework.web.client.RestTemplate;
+
+public class D {
+
+	
+	//please before running D.java ensure server is running.
+	
+	public static void main(String[] args) {
+		// suppose postman goes to post office
+		String url ="http://localhost:7700";
+		RestTemplate t =new RestTemplate();
+		
+//		  Account x = t.getForObject(url+"/pw?y=111", Account.class);
+//		  System.out.println(x);
+
+		  
+		  
+		//  Account n = t.getForObject(url+"/pw?x=112", Account.class); 
+	//	  System.out.println(n);
+
+
+		  
+		  
+		  
+		  
+//		  
+//	  List l = t.getForObject(url+"/ms",List.class); 
+//		  
+//		  System.out.println("-------??????????------------"+l);
+		
+		  
+		  
+//		  Account z =new  Account(151,999,90900);
+//		  Account q =  t.postForObject(url+"/upd", z, Account.class);
+//		  System.out.println("***************"+q);
+		  
+		  
+		  
+		  Account x = t.getForObject(url+"/del?x=112", Account.class);
+		  System.out.println("----deleted--------"+x);
+		  
+		  /*
+		
+		  List l = t.getForObject(url+"/ms",List.class); 
+		  
+		  System.out.println(l.size());
+		 
+		
+		  Mobile z =new Mobile(67,77);
+		  Mobile q =  t.postForObject("http://localhost:8080/upd", z, Mobile.class);
+		  System.out.println(q);
+		  
+		  
+		  
+		  */
+	}
+
+}
+
+//APPLICATION.PROPERTIES
+spring.datasource.driver.class=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost/accountdb
+spring.datasource.username=root
+spring.datasource.password=root
+
+server.port=7700
+
+## Hibernate properties.
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
+
+## Show sql query.
+spring.jpa.show-sql=true
+
+## Hibernate ddl auto.
+spring.jpa.hibernate.ddl-auto=validate
