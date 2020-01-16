@@ -1,0 +1,268 @@
+//MAIN CLASS
+package exam.hello;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class StartSpringBoot {
+
+	public static void main(String[] args) {
+		SpringApplication.run(StartSpringBoot.class, args);
+	}
+                   
+}
+
+//ENTITY CLASS
+package exam.hello;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+
+
+@Entity
+@Table(name = "customertable")
+public class Customer {
+	
+	@Id
+	private int custid;
+	private int rewards;
+	private String password;
+	private String city;
+  
+	
+	
+	public Customer() {
+	
+	}
+	
+	public Customer(int custid, int rewards, String password, String city) {
+		super();
+		this.custid = custid;
+		this.rewards = rewards;
+		this.password = password;
+		this.city = city;
+	}
+
+	public Customer(int custid) {
+		super();
+		this.custid = custid;
+	}
+
+	public int getCustid() {
+		return custid;
+	}
+
+	public void setCustid(int custid) {
+		this.custid = custid;
+	}
+
+	public int getRewards() {
+		return rewards;
+	}
+
+	public void setRewards(int rewards) {
+		this.rewards = rewards;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	@Override
+	public String toString() {
+		return "Customer [custid=" + custid + ", rewards=" + rewards + ", password=" + password + ", city=" + city
+				+ "]";
+	}
+	
+
+}
+//PRESENTATION CLASS
+package exam.hello;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+
+@CrossOrigin(origins = "*")
+@RestController
+public class A {
+	
+	private B obj1;
+	
+	public A()
+	{
+	}
+	
+	
+	@Autowired
+	public void setObj1(B obj1) {
+		System.out.println("Controller : service is wired with Controller ");
+		this.obj1 = obj1;
+	}
+	
+	
+	@GetMapping("/pw") //single select
+	public Customer f1(@RequestParam("x")int mn)
+	{
+		System.out.println("function pw is getting called");
+		Customer m =obj1.getId(mn);
+		return m;
+		
+	}
+	
+
+	@GetMapping("/ms") //multi select
+	public List<Customer> get()
+	{
+		List<Customer> x =obj1.getAll();
+		return x;
+		
+	}
+	@GetMapping("/del")
+	public Customer delData(@RequestParam("x")int accno) {
+		
+		Customer m = obj1.delAcc(accno);
+		return m;
+	}
+
+	@PostMapping("/upd")
+	public  Customer updateRecords(@RequestBody Customer n)//assume single select
+	{
+		Customer m =obj1.update(n);
+		return m;
+		
+	}
+	
+}
+//SERVICE CLASS
+package exam.hello;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class B {
+	
+	private C obj1;
+	
+	
+	@Autowired
+	public void setObj1(C obj1) {
+		System.out.println("Service : repository DAO  wired to service ");
+		this.obj1 = obj1;
+	}
+
+	public B()
+	{
+		
+	}
+
+	public Customer getId(int mn) {
+		// note obj1 here is a repository object
+		
+		Optional<Customer> x = obj1.findById(mn);
+		Customer y =null;
+		if(x.isPresent())
+		{
+			 y = x.get();  //get the mobile object
+			
+		}
+		else
+		{
+			y =new Customer(mn);	
+		}
+		return y;	
+		
+	}
+
+
+	public List<Customer> getAll() {
+		return obj1.findAll();
+	}
+	
+	public Customer delAcc(int accno) {
+		obj1.deleteById(accno);
+		Customer a = getId(accno);
+		return a;
+	}
+	
+	public Customer update(Customer n) {
+		//	System.out.println("update failure");
+			// TODO Auto-generated method stub
+		
+			if(obj1.existsById(n.getCustid()))
+			{	
+				obj1.save(n);
+			}//change of failing is almost zero.
+			
+			else
+			{	
+				n = new Customer(0);
+				//obj1.save(n);
+			}
+					return n;
+		}
+
+}
+
+//DAO REPOSITORY
+package exam.hello;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface C extends JpaRepository<Customer, Integer> {
+	
+	//Mobile is entity class, Integer is primary key
+	// hibernate will never work until you use concept called Primary key.
+	
+	//@Query("SELECT u FROM Mobile u WHERE u.imeino = 3")
+	//Collection<Mobile> findAllActiveUsers();
+		
+
+}
+
+
+//APPLICATION.PROPERTIES
+spring.datasource.driver.class=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/customer
+spring.datasource.username=root
+spring.datasource.password=root
+
+server.port=8080
+
+## Hibernate properties.
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
+
+## Show sql query.
+spring.jpa.show-sql=true
+
+## Hibernate ddl auto.
+spring.jpa.hibernate.ddl-auto=validate
