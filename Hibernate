@@ -1,0 +1,257 @@
+//ENTITY CLASS
+package hibernatejdbc;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+
+
+@Entity
+@Table(name = "customertable")
+public class Employee {
+	@Id
+	private int custId;
+	private int rewards;
+	private String password;
+	private String city;
+	public int getCustId() {
+		return custId;
+	}
+	public void setCustId(int custId) {
+		this.custId = custId;
+	}
+	public int getRewards() {
+		return rewards;
+	}
+	public void setRewards(int rewards) {
+		this.rewards = rewards;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getCity() {
+		return city;
+	}
+	public void setCity(String city) {
+		this.city = city;
+	}
+	@Override
+	public String toString() {
+		return "Employee [custId=" + custId + ", rewards=" + rewards + ", password=" + password + ", city=" + city
+				+ "]";
+	}
+
+}
+
+//MAIN CLASS
+package hibernatejdbc;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Architectur {
+	static Presentation d ;
+	
+	public static void main(String[] args) {
+		// TODO Auto- generated method stub
+		ClassPathXmlApplicationContext c = new ClassPathXmlApplicationContext("hibarnate.xml");
+		 d = c.getBean("obj2",Presentation.class);
+		 boolean b =true;
+
+		do {
+	b = menu();
+	
+	}while(b);
+	}
+	public static boolean menu() {
+		String s="1---->insert\n";
+		s+="2----->Single Select\n";
+		s+="3----->Multi Select\n";
+		s+="4----->update data Select\n";
+		s+="5----->delete data\n";
+		s+="Other key consider as Exit\n";
+		
+		
+		
+		Common.print(s);
+		int ch = Common.getInt("Enter Choice");
+		//Presentation p = new Presentation();
+		switch(ch) {
+	
+		case 1 :
+			d.insertData();
+			break;
+		case 2 :
+		d.selectSingleData();
+			break;
+		case 3 :
+			d.selectMultiData();
+				break;
+		case 4 :
+			d.updateData();
+			break;
+		case 5 :
+      		d.deleteData();
+			break;
+		default :
+			
+			Common.print("Exited");
+               return false;
+						
+		}
+		return true;
+		
+	}
+}
+
+//COMMON CLASS
+
+package hibernatejdbc;
+
+import java.util.Scanner;
+
+public class Common {
+	static Scanner sc  = new Scanner(System.in);
+	 static void print(String msg) {
+		System.out.println(msg);
+	}
+	
+	 static int getInt(String msg) {
+		print(msg);
+		return sc.nextInt(); 
+		
+	}
+	static String getString(String msg) {
+		print(msg);
+		return sc.next();
+	}
+	static float getFloat(String msg) {
+		print(msg);
+		return sc.nextFloat();
+	}
+}
+
+//PRESENTATION CLASS
+package hibernatejdbc;
+
+import java.util.List;
+
+
+
+public class Presentation {
+	
+private DAOLayer d;
+public void setDao(DAOLayer d) {
+	this.d = d;
+}
+Employee e = new Employee();
+	 void insertData(){
+		
+			e.setCustId(Common.getInt("Enter Unique Id\t"));
+			e.setPassword(Common.getString("Enter Name\t"));
+			e.setRewards(Common.getInt("Enter Rewards"));
+			e.setCity(Common.getString("Enter City\t"));
+			d.addData(e);	
+		}
+	
+	void updateData() {
+		e.setCustId(Common.getInt("Enter Id for Updation\t"));
+		e.setPassword(Common.getString("Enter Name\t"));
+		e.setRewards(Common.getInt("Enter Rewards"));
+		e.setCity(Common.getString("Enter City\t"));
+		d.updateDao(e);
+	}
+	void selectSingleData()
+	{
+	int id = Common.getInt("Enter Id want to see details\t");
+		Employee x = d.selectSingleDao(id);
+		System.out.println(x);
+	}
+	
+	void deleteData() {
+	int id = Common.getInt("Enter Id want to delete\t");	
+	d.deleteDao(id);
+	}
+	
+	void selectMultiData() {
+		String city = Common.getString("Enter city for details");
+		List<Employee> e = d.selectMultiDao(city);
+		System.out.println(e);
+	}
+	}
+  
+  //DAO CLASS
+  package hibernatejdbc;
+
+import java.util.List;
+import org.hibernate.query.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
+public class DAOLayer {
+	
+	private SessionFactory sf;
+	
+	public void setSessonFactory(SessionFactory sf) {
+		this.sf = sf;
+	}
+	
+	public void addData(Employee e) {
+		Session obj = sf.openSession();
+		Transaction t = obj.beginTransaction();
+		obj.save(e);
+		t.commit();
+		obj.close();
+	}
+	
+	public void updateDao(Employee e) {
+		Session obj = sf.openSession();
+		Transaction t = obj.beginTransaction();
+		e.setCustId(e.getCustId());
+		obj.update(e);
+		t.commit();
+		obj.close();
+		
+		
+	}
+
+	public Employee selectSingleDao(int id) {
+		// TODO Auto-generated method stub
+		Session obj = sf.openSession();
+		Employee e = obj.get(Employee.class, id);
+	
+		obj.close();
+		return e;
+		
+	}
+	
+
+	public void deleteDao(int id) {
+		// TODO Auto-generated method stub
+		Session obj = sf.openSession();
+		Transaction t = obj.beginTransaction();
+	    Employee e = obj.get(Employee.class, id);
+		obj.delete(e);
+		t.commit();
+		obj.close();
+	
+	}
+	public List<Employee> selectMultiDao(String city) {
+		// TODO Auto-generated method stub
+		Session obj = sf.openSession();
+		
+		Query<Employee> q = obj.createQuery("from Employee where city =city");
+		List<Employee> e = q.list();
+	
+		obj.close();
+		return e;
+		
+	}
+	
+
+}
+
